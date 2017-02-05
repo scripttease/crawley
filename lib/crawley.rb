@@ -36,13 +36,17 @@ class Crawler
 
     # adds the current (next_url) url to the visited url hash
     # with its assets
-    @visted_urls[next_url] = assets
+    @visited_urls[next_url] = assets
 
     @hrefs = Parser.new(page).href_parse
     subdomains = Subdomainer.new(@domain, @hrefs).make_subdomains
 
     @unvisited_urls = @unvisited_urls + (subdomains - @visited_urls.keys)
     #TODO check that the just visited url doesn't end up in the unvisited_urls
+
+    # binding.pry
+    # # binding placeholder
+    # @unvisited_urls = Set[]
 
   end
     # 1 crawler.run takes a domain, gets the page data
@@ -55,6 +59,7 @@ class Crawler
     # remove domain from unvisited list
     # 5 call run on next item in unvisited urls IF there are any 
     # otherwise return results
+    # CHANGED to while instead of attempting recursion
 end
 
 class Parser
@@ -69,8 +74,13 @@ class Parser
     end
   end
 
-  def asset_parse(page)
-    # link, img, script
+  def asset_parse
+    link_elems = @parsed_page.css('link[href]')
+    link_elems.map do |elem|
+      elem.attributes["href"].value
+    end
+    # TODO img[src], script[src]
+    # and add hosts
   end
 end
 
