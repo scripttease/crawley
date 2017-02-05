@@ -70,6 +70,10 @@ RSpec.describe Crawler do
     @domain = 'http://scripttease.uk'
   end
 
-  describe '#run' do
+  describe '#run!' do
+    #TODO stub page or mock HTTParty
+    xit 'calls scrape_next_url! ONLY if @unvisited_urls set is empty' do
+      expect(Crawler.new(@domain).run!).to eq {}
+    end
   end
 end

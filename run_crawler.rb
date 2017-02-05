@@ -5,7 +5,7 @@ require_relative 'lib/crawley.rb'
 
 puts 'Enter URL you wish to crawley'
 
-domain = 'https://www.sitepoint.com/guide-ruby-collections-ii-hashes-sets-ranges/'
+domain = 'https://scripttease.uk'
 # domain = gets.chomp
 
 results = Crawler.new(domain).run!
