@@ -65,22 +65,11 @@ RSpec.describe Subdomainer do
   end
 end
 
-RSpec.describe UrlTracker do
+RSpec.describe Crawler do
   before :example do 
     @domain = 'http://scripttease.uk'
   end
 
-  describe '#mark_as_visited' do
-    it 'adds given domain to url_set' do
-      url_set = Set.new
-      expect(UrlTracker.new(url_set).mark_as_visited(@domain)).to eq Set['http://scripttease.uk']
-    end
-
-    it 'adds to an exisiting set only if url not already present' do
-      url_set = Set['http://scripttease.uk']
-      expect(UrlTracker.new(url_set).mark_as_visited(@domain)).to eq Set['http://scripttease.uk']
-      url_set = Set['http://scripttease.uk']
-      expect(UrlTracker.new(url_set).mark_as_visited('http://scripttease.uk/about')).to eq Set['http://scripttease.uk', 'http://scripttease.uk/about']
-    end
+  describe '#run' do
   end
 end
