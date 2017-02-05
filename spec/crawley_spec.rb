@@ -39,8 +39,8 @@ RSpec.describe Subdomainer do
     end
 
     it 'does not add duplicates to the list' do
-      #TODO if there are trailing slashes or .html the url is still valid
-      # but the code cannot differentiate.
+      #TODO if url has a trailing / or .html, the url is still valid
+      # but the code cannot differentiate, so duplicates like this are possible.
       hrefs = [
         "how-i-made-a-jekyll-website.html",
         "how-i-made-a-jekyll-website.html",
@@ -61,6 +61,26 @@ RSpec.describe Subdomainer do
       expect(Subdomainer.new(@domain, hrefs).make_subdomains).to eq [
         "http://scripttease.uk/about/"
       ].map {|u| URI(u) }
+    end
+  end
+end
+
+RSpec.describe UrlTracker do
+  before :example do 
+    @domain = 'http://scripttease.uk'
+  end
+
+  describe '#mark_as_visited' do
+    it 'adds given domain to url_set' do
+      url_set = Set.new
+      expect(UrlTracker.new(url_set).mark_as_visited(@domain)).to eq Set['http://scripttease.uk']
+    end
+
+    it 'adds to an exisiting set only if url not already present' do
+      url_set = Set['http://scripttease.uk']
+      expect(UrlTracker.new(url_set).mark_as_visited(@domain)).to eq Set['http://scripttease.uk']
+      url_set = Set['http://scripttease.uk']
+      expect(UrlTracker.new(url_set).mark_as_visited('http://scripttease.uk/about')).to eq Set['http://scripttease.uk', 'http://scripttease.uk/about']
     end
   end
 end

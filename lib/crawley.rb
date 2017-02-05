@@ -8,22 +8,88 @@ require 'csv'
 require 'set'
 require 'uri'
 
-# urlTracker takes the parsed page data and decides if the url has been visited or not
-# after this it will call the crawler again.
-# so here there needs to be a thing that says if there are no more unvisited urls in the list you exit...
+
+class Crawler
+  def initialize(domain, visited_urls = Set.new)
+    @domain = domain
+    @visited_urls = visited_urls
+  end
+
+  def run!
+    page = HTTParty.get(@domain)
+    #TODO error handling in case site is down or url invalid
+
+    @visted_urls = UrlTracker.new(@visited_urls).mark_as_visited(@domain)
+
+    @hrefs = HrefParser.new(page).href_parse
+
+    @subdomains = Subdomainer.new(@domain, @hrefs).make_subdomains
+
+    @unvisited_urls
+
+    @next_domain = UrlTracker.new(@subdomains)
+
+    if @unvisited_urls.any?
+      Crawler.new(@unvisited_urls.first, @visited_urls).run!
+    else
+      @results
+    end
+    # 1 crawler.run takes a domain, gets the page data
+    # adds domain to visited_urls list
+    # 2 parses page, 
+    # 3 gets unique assets, adds to results list 
+    # 4 gets list of unique subdomains, adds to all_subdomains list
+    # this is a set so there cant be duplicates anyway.
+    # for each unique subdomain, if not in visited list, add to unvisited list
+    # remove domain from unvisited list
+    # 5 call run on next item in unvisited urls IF there are any 
+    # otherwise return results
+  end
+  # TODO fix problem that at hte moment all of the data like unvisited and results disappears when crawler is called on the next url in the list
+end
+
+class HrefParser
+  def initialize(page)
+    @parsed_page = Nokogiri::HTML(page)
+  end
+
+  def href_parse
+    href_elems = @parsed_page.css('a[href]')
+    href_elems.map do |elem|
+      elem.attributes["href"].value
+    end
+  end
+end
+
+class Subdomainer
+  def initialize(domain, hrefs)
+    @hrefs = hrefs
+    @domain = domain
+  end
+
+  def make_subdomains
+    urls = @hrefs.map do |href|
+      URI.join(@domain, href.strip)
+    end
+    filtered_urls = Set.new(urls)
+    filtered_urls.find_all do |url|
+      url.host == URI(@domain).host
+    end
+    # binding.pry
+  end
+end
 
 class UrlTracker
-  def initialize(subdomains)
-    @subdomains = subdomains
+  def initialize(url_set)
+    @url_set = url_set
   end
 
   def add_url(url)
     # new url add to pages
-    # huh???
   end
 
   def mark_as_visited(url)
-    # Record the given url as being visited
+    @url_set.add(url) 
   end
 
   def all_urls
@@ -39,71 +105,6 @@ class UrlTracker
   end
 end
 
-# Crawler takes a domain from run_ and gets and parses the page data
-# it gives the parsed page data to urlTracker
-#
-class Crawler
-  def initialize(domain)
-    @domain = domain
-    # @urlTracker = urlTracker.new(domain)
-  end
-
-  # need domain initialised simply to filter out links that are not subdomains.
-  # so could pass in directly to urlTracker?
-  # NOPE this is obvs wrong I use the domain to give to HTTParty!!!
-
-  def run!
-    page = HTTParty.get(@domain)
-
-    #TODO error handling in case site is down etc
-    #or domain is invalid etc (as this method will be called with the subdomains)
-
-    @hrefs = HrefParser.new(page).href_parse
-    @subdomains = Subdomainer.new(@domain, @hrefs).make_subdomains
-    UrlTracker.new(@subdomains)
-  end
-end
-
-class HrefParser
-  def initialize(page)
-    # @page = page
-    @parsed_page = Nokogiri::HTML(page)
-    # @domain = domain
-  end
-
-  def href_parse
-    # @parsed_page = Nokogiri::HTML(page)
-    href_elems = @parsed_page.css('a[href]')
-    hrefs = href_elems.map do |elem|
-      elem.attributes["href"].value
-    end
-    # make_subdomains(hrefs)
-  end
-end
-
-class Subdomainer
-  def initialize(domain, hrefs)
-    @hrefs = hrefs
-    @domain = domain
-  end
-
-  # want to check if the link starts with http already
-  # or would otherwise throw an error?
-  def make_subdomains
-    urls = @hrefs.map do |href|
-      URI.join(@domain, href.strip)
-    end
-    filtered_urls = Set.new(urls)
-    subdomains = filtered_urls.find_all do |url|
-      url.host == URI(@domain).host
-    end
-    # binding.pry
-    # subdomains.all
-  end
-end
-
-
-
 # this takes the parsed page data and extracts all the assets and adds them to the asset set (if it is a set there can't be duplicates so no need to check)
 #
 class AssetTracker
@@ -113,12 +114,4 @@ class AssetTracker
 
 end
 
-# def self.visited_pagepages(url)
-#   set = Set.new [@input_url]
-#   set.add(url)
-# end
-# asset_hash = visited_pages.each do vp {
-#   {vp: asset_array}
-# }
-# end
 

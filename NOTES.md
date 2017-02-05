@@ -48,3 +48,41 @@ Testing
 We will test your submission against gocardless.com, although it should be possible to run it against any website.
  
 Please submit the challenge within a week.
+
+
+> # Crawler takes a domain from run_ and gets and parses the page data
+> # it gives the parsed page data to urlTracker
+> #
+> # after this it will call the crawler again.
+> # so here there needs to be a thing that says if there are no more unvisited urls in the list you exit...
+
+>   # how about initialising with an array of sets?
+>   # that gives me lots of default args?
+
+>   # need domain initialised simply to filter out links that are not subdomains.
+>   # so could pass in directly to urlTracker?
+>   # NOPE this is obvs wrong I use the domain to give to HTTParty!!!
+
+>     # somehow, the urlTracker needs to keep hold of the last lot of subdomains
+>     # This isn't possible if it is in a seperate class...
+>     # so seperate code so that all the methods are working on simply single objects
+>     # then one class calls those methods and accumulates the list.
+>     #
+
+>   # want to check if the link starts with http already
+>   # or would otherwise throw an error?
+>   # seems that URI handles this case...
+> # change this into a class that does subdomaining just for each hrf
+> # that way it can be called form the tracker.
+
+
+> # urlTracker takes the parsed page data and decides if the url has been visited or not
+
+> # def self.visited_pagepages(url)
+> #   set = Set.new [@input_url]
+> #   set.add(url)
+> # end
+> # asset_hash = visited_pages.each do vp {
+> #   {vp: asset_array}
+> # }
+> # end
