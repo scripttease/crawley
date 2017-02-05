@@ -8,37 +8,6 @@ require 'csv'
 require 'set'
 require 'uri'
 
-class Crawler
-  def initialize(domain)
-    @domain = domain
-    @visited_urls = {} # { page_url => [links_from_page] }
-    @unvisited_urls = Set.new([domain])
-  end
-
-  def run!
-    while @unvisited_urls.any?
-      scrape_next_url!
-    end
-    @visited_urls
-  end
-
-  private
-
-  def scrape_next_url!
-    next_url = @unvisited_urls.pop  # Get and remove a url
-    page_urls = get_page_urls(next_url) # Method not written yet, 
-                                        # it will do the get and HTML parsing etc
-
-    # Add page and contained links to visited_urls
-    @visited_urls[next_url] = page_urls
-
-    # Add any new URLs to the unvisited_urls
-    with_subs = add_missing_subdomains(page_urls)
-    valid_urls = remove_urls_for_incorrect_domain(with_subs, @domain)
-    @unvisited_urls = @unvisited_urls + (valid_urls - @visited_urls.keys)
-  end
-end
-
 
 class Crawler
   def initialize(domain)
@@ -58,7 +27,7 @@ class Crawler
 
     # Takes a url out of unvisited set in order to scrape and parse
     next_url = @unvisited_urls.take(1)
-    @unvisited_urls.subtract(1)
+    @unvisited_urls.delete(1)
     # TODO extract to method to test always removes same one
 
     page = HTTParty.get(next_url)
