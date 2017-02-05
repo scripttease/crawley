@@ -1,5 +1,8 @@
 #!/usr/bin/env ruby
 gem 'rspec'
+# TODO
+# remove to gemfile
+# put bundle in README install instructions
 require 'rspec'
 require 'set'
 require 'uri'
@@ -70,7 +73,7 @@ RSpec.describe Subdomainer do
         "how-i-made-a-jekyll-website.html",
         "#how-i-made-a-jekyll-website.html",
       ]
-      expect(Subdomainer.new(@domain, hrefs).fragment_filter).to eq [
+      expect(Subdomainer.new(@domain, hrefs).fragment_filter(hrefs)).to eq [
         'how-i-made-a-jekyll-website.html',
       ]
     end

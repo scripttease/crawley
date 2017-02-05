@@ -76,9 +76,9 @@ class Subdomainer
     @domain = domain
   end
 
-  def fragment_filter
+  def fragment_filter(hrefs)
     # filters out hrefs that are in-page anchors
-    @non_fragment_urls = @hrefs.select do |href|
+    hrefs.select do |href|
       href.split(//).first != '#'
     end
   end
@@ -91,7 +91,9 @@ class Subdomainer
     else
       domain_root = URI::HTTPS.build({host: domain_host})
     end
-    urls = @hrefs.map do |href|
+    valid_hrefs = fragment_filter(@hrefs)
+    urls = valid_hrefs.map do |href|
+    # urls = @hrefs.map do |href|
       URI.join(domain_root, href.strip)
     end
     # Ensures that only domains with the same host are returned
