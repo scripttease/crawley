@@ -26,9 +26,8 @@ class Crawler
   def scrape_next_url!
 
     # Takes a url out of unvisited set in order to scrape and parse
-    next_url = @unvisited_urls.take(1)
-    @unvisited_urls.delete(1)
-    # TODO extract to method to test always removes same one
+    next_url = @unvisited_urls.take(1)[0]
+    @unvisited_urls.subtract([next_url])
 
     page = HTTParty.get(next_url)
     #TODO error handling in case site is down or url invalid
