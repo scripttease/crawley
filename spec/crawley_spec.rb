@@ -1,11 +1,7 @@
 #!/usr/bin/env ruby
-gem 'rspec'
-# TODO
-# remove to gemfile
-# put bundle in README install instructions
+
 require 'rspec'
 require 'set'
-require 'uri'
 require_relative '../lib/crawley'
 
 RSpec.describe UrlManager do
@@ -19,59 +15,59 @@ RSpec.describe UrlManager do
 
     it 'returns valid subdomains from href array ' do
       hrefs = [
-        "/",
-        " /2016/06/12/you-git.html",
-        "how-i-made-a-jekyll-website.html",
+        '/',
+        ' /2016/06/12/you-git.html',
+        'how-i-made-a-jekyll-website.html',
       ]
       expect(UrlManager.new(@domain, hrefs).prefix_hrefs).to eq [
-        'http://scripttease.uk/',
+        'http://scripttease.uk',
         'http://scripttease.uk/2016/06/12/you-git.html',
         'http://scripttease.uk/how-i-made-a-jekyll-website.html',
-      ].map {|u| URI(u) }
+      ]
     end
 
     it 'only joins the domain prefix if it is absent' do
       hrefs = [
-        "how-i-made-a-jekyll-website.html",
-        "http://scripttease.uk/about",
+        'how-i-made-a-jekyll-website.html',
+        'http://scripttease.uk/about',
       ]
       expect(UrlManager.new(@domain, hrefs).prefix_hrefs).to eq [
         'http://scripttease.uk/how-i-made-a-jekyll-website.html',
-        "http://scripttease.uk/about",
-      ].map {|u| URI(u) }
+        'http://scripttease.uk/about',
+      ]
     end
 
     it 'does not add duplicates to the list' do
       #TODO if url has a trailing / or .html, the url is still valid
       # but the code cannot differentiate, so duplicates like this are possible.
       hrefs = [
-        "how-i-made-a-jekyll-website.html",
-        "how-i-made-a-jekyll-website.html",
-        "http://scripttease.uk/about/",
-        "http://scripttease.uk/about/"
+        'how-i-made-a-jekyll-website.html',
+        'how-i-made-a-jekyll-website.html',
+        'http://scripttease.uk/about',
+        'http://scripttease.uk/about/'
       ]
       expect(UrlManager.new(@domain, hrefs).prefix_hrefs).to eq [
         'http://scripttease.uk/how-i-made-a-jekyll-website.html',
-        "http://scripttease.uk/about/"
-      ].map {|u| URI(u) }
+        'http://scripttease.uk/about'
+      ]
     end
 
     it 'only adds subdomains' do
       hrefs = [
-        "http://scripttease.uk/about/",
-        "http://twitter.uk/scripttease/",
+        'http://scripttease.uk/about/',
+        'http://twitter.uk/scripttease/',
       ]
       expect(UrlManager.new(@domain, hrefs).prefix_hrefs).to eq [
-        "http://scripttease.uk/about/"
-      ].map {|u| URI(u) }
+        'http://scripttease.uk/about'
+      ]
     end
   end
 
   describe '#fragment_filter' do
     it 'filters out hrefs that start with #' do
       hrefs = [
-        "how-i-made-a-jekyll-website.html",
-        "#how-i-made-a-jekyll-website.html",
+        'how-i-made-a-jekyll-website.html',
+        '#how-i-made-a-jekyll-website.html',
       ]
       expect(UrlManager.new(@domain, hrefs).fragment_filter(hrefs)).to eq [
         'how-i-made-a-jekyll-website.html',

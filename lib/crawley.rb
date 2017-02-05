@@ -102,9 +102,10 @@ class UrlManager
     end.compact
     # Ensures that only domains with the same host are returned
     # TODO extract into seperate method
-    filtered_urls = Set.new(urls)
-    filtered_urls.find_all do |url|
+    urls.find_all do |url|
       url.host == domain_host
-    end
+    end.map do |uri| 
+      uri.to_s.sub(%r{/\z}, '')
+    end.uniq
   end
 end
