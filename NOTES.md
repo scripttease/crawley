@@ -86,3 +86,14 @@ Please submit the challenge within a week.
 > #   {vp: asset_array}
 > # }
 > # end
+
+    > # 1 crawler.run takes a domain, gets the page data
+    > # adds domain to visited_urls list
+    > # 2 parses page, 
+    > # 3 gets unique assets, adds to results list 
+    > # 4 gets list of unique subdomains, adds to all_subdomains list
+    > # this is a set so there cant be duplicates anyway.
+    > # for each unique subdomain, if not in visited list, add to unvisited list
+    > # remove domain from unvisited list
+    > # 5 call run on next item in unvisited urls IF there are any 
+    > # otherwise return results
