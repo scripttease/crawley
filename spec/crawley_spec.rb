@@ -63,6 +63,18 @@ RSpec.describe Subdomainer do
       ].map {|u| URI(u) }
     end
   end
+
+  describe '#fragment_filter' do
+    it 'filters out hrefs that start with #' do
+      hrefs = [
+        "how-i-made-a-jekyll-website.html",
+        "#how-i-made-a-jekyll-website.html",
+      ]
+      expect(Subdomainer.new(@domain, hrefs).fragment_filter).to eq [
+        'how-i-made-a-jekyll-website.html',
+      ]
+    end
+  end
 end
 
 RSpec.describe Crawler do
