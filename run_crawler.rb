@@ -8,7 +8,7 @@ puts 'Enter URL you wish to crawley'
 domain = 'https://www.sitepoint.com/guide-ruby-collections-ii-hashes-sets-ranges/'
 # domain = gets.chomp
 
-results = Crawler.new(domain, visited_urls).run!
+results = Crawler.new(domain).run!
 
 puts results.to_json
 

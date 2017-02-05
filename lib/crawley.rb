@@ -8,32 +8,74 @@ require 'csv'
 require 'set'
 require 'uri'
 
-
 class Crawler
-  def initialize(domain, visited_urls = Set.new)
+  def initialize(domain)
     @domain = domain
-    @visited_urls = visited_urls
+    @visited_urls = {} # { page_url => [links_from_page] }
+    @unvisited_urls = Set.new([domain])
   end
 
   def run!
+    while @unvisited_urls.any?
+      scrape_next_url!
+    end
+    @visited_urls
+  end
+
+  private
+
+  def scrape_next_url!
+    next_url = @unvisited_urls.pop  # Get and remove a url
+    page_urls = get_page_urls(next_url) # Method not written yet, 
+                                        # it will do the get and HTML parsing etc
+
+    # Add page and contained links to visited_urls
+    @visited_urls[next_url] = page_urls
+
+    # Add any new URLs to the unvisited_urls
+    with_subs = add_missing_subdomains(page_urls)
+    valid_urls = remove_urls_for_incorrect_domain(with_subs, @domain)
+    @unvisited_urls = @unvisited_urls + (valid_urls - @visited_urls.keys)
+  end
+end
+
+
+class Crawler
+  def initialize(domain)
+    @domain = domain
+    @visited_urls = {} # { visited_url => [static_assets], ...}
+    @unvisited_urls = Set.new([domain])
+  end
+
+  def run!
+    while @unvisited_urls.any?
+      scrape_next_url!
+    end
+    @visited_urls
+  end
+
+  def scrape_next_url!
     page = HTTParty.get(@domain)
     #TODO error handling in case site is down or url invalid
 
-    @visted_urls = UrlTracker.new(@visited_urls).mark_as_visited(@domain)
+    # Takes a url out of unvisited set in order to scrape and parse
+    next_url = @unvisited_urls.take(1)
+    @unvisited_urls.subtract(1)
+    # TODO extract to method to test always removes same one
 
-    @hrefs = HrefParser.new(page).href_parse
+    assets = Parser.new(page).asset_parse
 
-    @subdomains = Subdomainer.new(@domain, @hrefs).make_subdomains
+    # adds the current (next_url) url to the visited url hash
+    # with its assets
+    @visted_urls[next_url] = assets
 
-    @unvisited_urls
+    @hrefs = Parser.new(page).href_parse
+    subdomains = Subdomainer.new(@domain, @hrefs).make_subdomains
 
-    @next_domain = UrlTracker.new(@subdomains)
+    @unvisited_urls = @unvisited_urls + (subdomains - @visited_urls.keys)
+    #TODO check that the just visited url doesn't end up in the unvisited_urls
 
-    if @unvisited_urls.any?
-      Crawler.new(@unvisited_urls.first, @visited_urls).run!
-    else
-      @results
-    end
+  end
     # 1 crawler.run takes a domain, gets the page data
     # adds domain to visited_urls list
     # 2 parses page, 
@@ -44,11 +86,9 @@ class Crawler
     # remove domain from unvisited list
     # 5 call run on next item in unvisited urls IF there are any 
     # otherwise return results
-  end
-  # TODO fix problem that at hte moment all of the data like unvisited and results disappears when crawler is called on the next url in the list
 end
 
-class HrefParser
+class Parser
   def initialize(page)
     @parsed_page = Nokogiri::HTML(page)
   end
@@ -58,6 +98,10 @@ class HrefParser
     href_elems.map do |elem|
       elem.attributes["href"].value
     end
+  end
+
+  def asset_parse(page)
+    # link, img, script
   end
 end
 
@@ -75,43 +119,5 @@ class Subdomainer
     filtered_urls.find_all do |url|
       url.host == URI(@domain).host
     end
-    # binding.pry
   end
 end
-
-class UrlTracker
-  def initialize(url_set)
-    @url_set = url_set
-  end
-
-  def add_url(url)
-    # new url add to pages
-  end
-
-  def mark_as_visited(url)
-    @url_set.add(url) 
-  end
-
-  def all_urls
-    # All urls
-  end
-
-  def visited_urls
-    # All visited urls
-  end
-
-  def unvisited_urls
-    # All unvisited urls
-  end
-end
-
-# this takes the parsed page data and extracts all the assets and adds them to the asset set (if it is a set there can't be duplicates so no need to check)
-#
-class AssetTracker
-  def initialise(parsed_page)
-    @parsed_page = parsed_page
-  end
-
-end
-
-
