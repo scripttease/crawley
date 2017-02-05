@@ -30,6 +30,8 @@ class Crawler
     next_url = @unvisited_urls.take(1)[0]
     @unvisited_urls.subtract([next_url])
 
+    puts "Scraping #{next_url}"
+
     page = HTTParty.get(next_url)
     #TODO error handling in case site is down or url invalid
 
@@ -40,7 +42,7 @@ class Crawler
     @visited_urls[next_url] = assets
 
     @hrefs = Parser.new(page).href_parse
-    subdomains = Subdomainer.new(@domain, @hrefs).make_subdomains
+    subdomains = UrlManager.new(@domain, @hrefs).prefix_hrefs
 
     # binding.pry
     @unvisited_urls = @unvisited_urls + (subdomains - @visited_urls.keys)
@@ -70,7 +72,7 @@ class Parser
   end
 end
 
-class Subdomainer
+class UrlManager
   def initialize(domain, hrefs)
     @hrefs = hrefs
     @domain = domain
@@ -83,7 +85,7 @@ class Subdomainer
     end
   end
 
-  def make_subdomains
+  def prefix_hrefs
     domain_scheme = URI(@domain).scheme
     domain_host = URI(@domain).host
     if domain_scheme == 'http'
@@ -93,15 +95,17 @@ class Subdomainer
     end
     valid_hrefs = fragment_filter(@hrefs)
     urls = valid_hrefs.map do |href|
-    # urls = @hrefs.map do |href|
-      URI.join(domain_root, href.strip)
-    end
+      begin
+        URI.join(domain_root, href.strip)
+      rescue URI::InvalidURIError
+        nil
+      end
+    end.compact
     # Ensures that only domains with the same host are returned
+    # TODO extract into seperate method
     filtered_urls = Set.new(urls)
     filtered_urls.find_all do |url|
       url.host == domain_host
     end
   end
-  # prefix host name
-  # internal links not external links only
 end

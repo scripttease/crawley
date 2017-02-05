@@ -8,14 +8,14 @@ require 'set'
 require 'uri'
 require_relative '../lib/crawley'
 
-RSpec.describe Subdomainer do
+RSpec.describe UrlManager do
   before :example do 
     @domain = 'http://scripttease.uk'
     # @page = 'blah'
     # @parser = Parser.new(@page)
   end
 
-  describe '#make_subdomains' do
+  describe '#prefix_hrefs' do
 
     it 'returns valid subdomains from href array ' do
       hrefs = [
@@ -23,7 +23,7 @@ RSpec.describe Subdomainer do
         " /2016/06/12/you-git.html",
         "how-i-made-a-jekyll-website.html",
       ]
-      expect(Subdomainer.new(@domain, hrefs).make_subdomains).to eq [
+      expect(UrlManager.new(@domain, hrefs).prefix_hrefs).to eq [
         'http://scripttease.uk/',
         'http://scripttease.uk/2016/06/12/you-git.html',
         'http://scripttease.uk/how-i-made-a-jekyll-website.html',
@@ -35,7 +35,7 @@ RSpec.describe Subdomainer do
         "how-i-made-a-jekyll-website.html",
         "http://scripttease.uk/about",
       ]
-      expect(Subdomainer.new(@domain, hrefs).make_subdomains).to eq [
+      expect(UrlManager.new(@domain, hrefs).prefix_hrefs).to eq [
         'http://scripttease.uk/how-i-made-a-jekyll-website.html',
         "http://scripttease.uk/about",
       ].map {|u| URI(u) }
@@ -50,7 +50,7 @@ RSpec.describe Subdomainer do
         "http://scripttease.uk/about/",
         "http://scripttease.uk/about/"
       ]
-      expect(Subdomainer.new(@domain, hrefs).make_subdomains).to eq [
+      expect(UrlManager.new(@domain, hrefs).prefix_hrefs).to eq [
         'http://scripttease.uk/how-i-made-a-jekyll-website.html',
         "http://scripttease.uk/about/"
       ].map {|u| URI(u) }
@@ -61,7 +61,7 @@ RSpec.describe Subdomainer do
         "http://scripttease.uk/about/",
         "http://twitter.uk/scripttease/",
       ]
-      expect(Subdomainer.new(@domain, hrefs).make_subdomains).to eq [
+      expect(UrlManager.new(@domain, hrefs).prefix_hrefs).to eq [
         "http://scripttease.uk/about/"
       ].map {|u| URI(u) }
     end
@@ -73,7 +73,7 @@ RSpec.describe Subdomainer do
         "how-i-made-a-jekyll-website.html",
         "#how-i-made-a-jekyll-website.html",
       ]
-      expect(Subdomainer.new(@domain, hrefs).fragment_filter(hrefs)).to eq [
+      expect(UrlManager.new(@domain, hrefs).fragment_filter(hrefs)).to eq [
         'how-i-made-a-jekyll-website.html',
       ]
     end
