@@ -32,7 +32,7 @@ class Crawler
 
     puts "Scraping #{next_url}"
 
-    page = HTTParty.get(next_url)
+    page = HTTParty.get(next_url).body
     #TODO error handling in case site is down or url invalid
 
     assets = Parser.new(page).asset_parse
@@ -42,10 +42,9 @@ class Crawler
     @visited_urls[next_url] = assets
 
     @hrefs = Parser.new(page).href_parse
-    subdomains = UrlManager.new(@domain, @hrefs).prefix_hrefs
+    full_hrefs = UrlManager.new(@domain, @hrefs).prefix_hrefs
 
-    # binding.pry
-    @unvisited_urls = @unvisited_urls + (subdomains - @visited_urls.keys)
+    @unvisited_urls = @unvisited_urls + (full_hrefs - @visited_urls.keys)
     #TODO check that the just visited url doesn't end up in the unvisited_urls
   end
 end

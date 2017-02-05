@@ -5,7 +5,9 @@ require_relative 'lib/crawley.rb'
 
 puts 'Enter URL you wish to crawley'
 
-domain = 'https://scripttease.uk/2016/06/12/you-git.html'
+# domain = 'https://scripttease.uk/ok'
+# domain = 'https://gocardless.com/users/registrations/membership_options'
+domain = 'https://gocardless.com/'
 # domain = gets.chomp
 
 results = Crawler.new(domain).run!
