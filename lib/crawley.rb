@@ -27,15 +27,14 @@ class Crawler
 
   def scrape_next_url!
     # Takes a url out of unvisited set in order to scrape and parse
-    next_url = @unvisited_urls.take(1)[0]
-    @unvisited_urls.subtract([next_url])
+    next_url = @unvisited_urls.first
+    @unvisited_urls.delete(next_url)
 
     puts "Scraping #{next_url}"
 
     page = HTTParty.get(next_url).body
     #TODO error handling in case site is down or url invalid
-
-    assets = Parser.new(page).asset_parse
+    assets = Parser.new(page).asset_parser
 
     # adds the current (next_url) url to the visited url hash
     # with its assets
@@ -50,10 +49,13 @@ class Crawler
 end
 
 class Parser
+  # def initialize(parsed_page = Nokogiri::HTML(page))
+  #   @parsed_page = parsed_page
   def initialize(page)
-    @parsed_page = Nokogiri::HTML(page)
+    @parsed_page= Nokogiri::HTML(page)
   end
 
+  # returns array of paths for site page links
   def href_parse
     href_elems = @parsed_page.css('a[href]')
     href_elems.map do |elem|
@@ -63,11 +65,48 @@ class Parser
 
   def asset_parse
     link_elems = @parsed_page.css('link[href]')
-    link_elems.map do |elem|
+    #TODO currently puts prev and next and other links as assets
+    # Remove page links from assets
+    link_elems = link_elems.map do |elem|
       elem.attributes["href"].value
     end
-    # TODO img[src], script[src]
-    # and add hosts
+    # TODO add hosts
+    img_elems = @parsed_page.css('img[src]')
+    img_elems = img_elems.map do |elem|
+      elem.attributes["src"].value
+    end
+    #TODO use ' or " - be consistent.
+    script_elems = @parsed_page.css('script[src]')
+    script_elems = script_elems.map do |elem|
+      elem.attributes["src"].value
+    end
+    (script_elems + img_elems + link_elems).flatten.uniq
+
+  end
+
+  def asset_parser
+    link_elems = href_parser('link[href]', 'href')
+    link_elems_filtered = asset_link_filter(link_elems)
+    script_elems = href_parser('script[src]', 'src')
+    img_elems = href_parser('img[src]', 'src')
+    (script_elems + img_elems + link_elems_filtered).flatten.uniq
+  end
+
+  # Returns array of href values for css selector[attribute]
+  def href_parser(selector_attr, attrb)
+    href_elems = @parsed_page.css(selector_attr)
+    href_elems = href_elems.map do |elem|
+      elem.attributes[attrb].value
+    end
+    asset_link_filter(href_elems)
+  end
+
+  # Remove page url links from assets array
+  def asset_link_filter(asset_array)
+    asset_array.select do |asset|
+      asset.split(//).last != '/'
+    end
+    #TODO also filter out .html endings
   end
 end
 
@@ -104,7 +143,9 @@ class UrlManager
     # TODO extract into seperate method
     urls.find_all do |url|
       url.host == domain_host
-    end.map do |uri| 
+    end.map do |uri|
+      # Converts from URI object to string
+      # Removes trailing slash
       uri.to_s.sub(%r{/\z}, '')
     end.uniq
   end
