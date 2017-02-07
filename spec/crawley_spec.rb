@@ -4,11 +4,10 @@ require 'rspec'
 require 'set'
 require_relative '../lib/crawley'
 
+#TODO add an integration test that only runs when called with rspec option
 RSpec.describe UrlManager do
   before :example do 
     @domain = 'http://scripttease.uk'
-    # @page = 'blah'
-    # @parser = Parser.new(@page)
   end
 
   describe '#prefix_hrefs' do
@@ -82,7 +81,6 @@ RSpec.describe Crawler do
   end
 
   describe '#run!' do
-    #TODO stub page or mock HTTParty
     xit 'calls scrape_next_url! ONLY if @unvisited_urls set is empty' do
       expect(Crawler.new(@domain).run!).to eq {}
     end
@@ -93,13 +91,19 @@ RSpec.describe Parser do
 
   describe '#href_parser' do
     before :example do 
-      @page = "<link href='https://fonts.googleapis.com/css?family=Josefin+Sans:400,400italic,600,600italic' rel='stylesheet' type='text/css'>"
+      @page = "<link href='https://fonts.googleapis.com/css?family=Josefin+Sans:400,400italic,600,600italic' rel='stylesheet' type='text/css'> <script src='/rainbow-rain.js'></script> <img alt='@scripttease' class='avatar' height='20' src='https://avatars2.githubusercontent.com/u/16262154' width='20' />"
     end
 
     it 'Returns array of href values for css selector[attribute]' do
       selector_attr = 'link[href]'
       attrb = 'href'
       expect(Parser.new(@page).href_parser(selector_attr, attrb)).to eq ['https://fonts.googleapis.com/css?family=Josefin+Sans:400,400italic,600,600italic']
+      selector_attr = 'script[src]'
+      attrb = 'src'
+      expect(Parser.new(@page).href_parser(selector_attr, attrb)).to eq ['/rainbow-rain.js']
+      selector_attr = 'img[src]'
+      attrb = 'src'
+      expect(Parser.new(@page).href_parser(selector_attr, attrb)).to eq ['https://avatars2.githubusercontent.com/u/16262154']
     end
   end
 
@@ -114,10 +118,10 @@ RSpec.describe Parser do
     end
   end
 
-  describe '.asset_link_filter' do
+  describe '#asset_link_filter' do
     it 'Remove page url links from assets array' do
       expect(Parser.new(@page).asset_link_filter(['https://fonts.googleapis.com/css?family=Josefin+Sans:400,400italic,600,600italic', 'http://scripttease.uk/how-i-made-a-jekyll-website/'])).to eq ['https://fonts.googleapis.com/css?family=Josefin+Sans:400,400italic,600,600italic']
     end
   end
-  #TODO Spec .asset_parser, .asset_parser?
+  #TODO test for asset_parser
 end
