@@ -24,7 +24,7 @@ rescue URI::InvalidURIError
 end
 
 unless input_url.scheme
-    input_url = ('http://' + input_url.path)
+    input_url = ('https://' + input_url.path)
 end
 
 input_url.to_s
@@ -32,3 +32,9 @@ input_url.to_s
 results = Crawler.new(input_url).run!
 
 puts JSON.pretty_generate(results)
+#TODO Catch where scheme not given but input_url is actually http not https
+# Could implement this by saying if results assets are empty try https.
+# If results are STILL empty, return "This URL appears to have no links or static assets, perhaps it is invalid, check and try again"
+# Then return the prompt.
+#
+# TODO write results to file?
