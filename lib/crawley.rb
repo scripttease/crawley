@@ -9,11 +9,12 @@ require 'set'
 require 'uri'
 
 
+# TODO name change to Crawley
 class Crawler
-  def initialize(domain)
-    @domain = domain
+  def initialize(input_url)
+    @input_url = input_url
     @visited_urls = {} # { visited_url => [static_assets], ...}
-    @unvisited_urls = Set.new([domain])
+    @unvisited_urls = Set.new([input_url])
   end
 
   def run!
@@ -32,7 +33,7 @@ class Crawler
 
     puts "Scraping #{next_url}"
 
-    page = HTTParty.get(next_url).body
+    page = MyParty.get(next_url).body
     #TODO error handling in case site is down or url invalid
     assets = Parser.new(page).asset_parser
 
@@ -41,9 +42,27 @@ class Crawler
     @visited_urls[next_url] = assets
 
     @hrefs = Parser.new(page).href_parse
-    full_hrefs = UrlManager.new(@domain, @hrefs).prefix_hrefs
+    full_hrefs = UrlManager.new(@input_url, @hrefs).prefix_hrefs
 
     @unvisited_urls = @unvisited_urls + (full_hrefs - @visited_urls.keys)
+  end
+end
+
+#TODO ensure this handles 404 and no connection
+class MyParty
+  def self.get(*args)
+    begin
+      response = HTTParty.get(*args)
+    rescue HTTParty::Error
+      case response.code
+      when 200
+        response
+      when 404
+        puts "Not found!"
+      when 500...600
+        puts "Error #{response.code}"
+      end
+    end
   end
 end
 
@@ -89,9 +108,9 @@ class Parser
 end
 
 class UrlManager
-  def initialize(domain, hrefs)
+  def initialize(input_url, hrefs)
     @hrefs = hrefs
-    @domain = domain
+    @input_url = input_url
   end
 
   def fragment_filter(hrefs)
@@ -102,25 +121,25 @@ class UrlManager
   end
 
   def prefix_hrefs
-    domain_scheme = URI(@domain).scheme
-    domain_host = URI(@domain).host
-    if domain_scheme == 'http'
-      domain_root = URI::HTTP.build({host: domain_host})
+    input_url_scheme = URI(@input_url).scheme
+    input_url_host = URI(@input_url).host
+    if input_url_scheme == 'http'
+      input_url_root = URI::HTTP.build({host: input_url_host})
     else
-      domain_root = URI::HTTPS.build({host: domain_host})
+      input_url_root = URI::HTTPS.build({host: input_url_host})
     end
     valid_hrefs = fragment_filter(@hrefs)
     urls = valid_hrefs.map do |href|
       begin
-        URI.join(domain_root, href.strip)
+        URI.join(input_url_root, href.strip)
       rescue URI::InvalidURIError
         nil
       end
     end.compact
-    # Ensures that only domains with the same host are returned
+    # Ensures that only input_urls with the same host are returned
     # TODO extract into seperate method
     urls.find_all do |url|
-      url.host == domain_host
+      url.host == input_url_host
     end.map do |uri|
       # Converts from URI object to string
       # Removes trailing slash

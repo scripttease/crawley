@@ -7,30 +7,30 @@ require_relative '../lib/crawley'
 #TODO add an integration test that only runs when called with rspec option
 RSpec.describe UrlManager do
   before :example do 
-    @domain = 'http://scripttease.uk'
+    @input_url = 'http://scripttease.uk'
   end
 
   describe '#prefix_hrefs' do
 
-    it 'returns valid subdomains from href array ' do
+    it 'returns valid url with root from href array ' do
       hrefs = [
         '/',
         ' /2016/06/12/you-git.html',
         'how-i-made-a-jekyll-website.html',
       ]
-      expect(UrlManager.new(@domain, hrefs).prefix_hrefs).to eq [
+      expect(UrlManager.new(@input_url, hrefs).prefix_hrefs).to eq [
         'http://scripttease.uk',
         'http://scripttease.uk/2016/06/12/you-git.html',
         'http://scripttease.uk/how-i-made-a-jekyll-website.html',
       ]
     end
 
-    it 'only joins the domain prefix if it is absent' do
+    it 'only joins the input_url prefix if it is absent' do
       hrefs = [
         'how-i-made-a-jekyll-website.html',
         'http://scripttease.uk/about',
       ]
-      expect(UrlManager.new(@domain, hrefs).prefix_hrefs).to eq [
+      expect(UrlManager.new(@input_url, hrefs).prefix_hrefs).to eq [
         'http://scripttease.uk/how-i-made-a-jekyll-website.html',
         'http://scripttease.uk/about',
       ]
@@ -45,18 +45,18 @@ RSpec.describe UrlManager do
         'http://scripttease.uk/about/',
         'http://scripttease.uk/about/'
       ]
-      expect(UrlManager.new(@domain, hrefs).prefix_hrefs).to eq [
+      expect(UrlManager.new(@input_url, hrefs).prefix_hrefs).to eq [
         'http://scripttease.uk/how-i-made-a-jekyll-website.html',
         'http://scripttease.uk/about'
       ]
     end
 
-    it 'only adds subdomains' do
+    it 'only adds url with root' do
       hrefs = [
         'http://scripttease.uk/about/',
         'http://twitter.uk/scripttease/',
       ]
-      expect(UrlManager.new(@domain, hrefs).prefix_hrefs).to eq [
+      expect(UrlManager.new(@input_url, hrefs).prefix_hrefs).to eq [
         'http://scripttease.uk/about'
       ]
     end
@@ -68,7 +68,7 @@ RSpec.describe UrlManager do
         'how-i-made-a-jekyll-website.html',
         '#how-i-made-a-jekyll-website.html',
       ]
-      expect(UrlManager.new(@domain, hrefs).fragment_filter(hrefs)).to eq [
+      expect(UrlManager.new(@input_url, hrefs).fragment_filter(hrefs)).to eq [
         'how-i-made-a-jekyll-website.html',
       ]
     end
@@ -77,12 +77,12 @@ end
 
 RSpec.describe Crawler do
   before :example do 
-    @domain = 'http://scripttease.uk'
+    @input_url = 'http://scripttease.uk'
   end
 
   describe '#run!' do
     xit 'calls scrape_next_url! ONLY if @unvisited_urls set is empty' do
-      expect(Crawler.new(@domain).run!).to eq {}
+      expect(Crawler.new(@input_url).run!).to eq {}
     end
   end
 end
