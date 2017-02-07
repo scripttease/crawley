@@ -3,7 +3,9 @@ Crawley
 
 ### A web Crawler which scrapes a given domain and returns its assets along withh the assets of all accessible domains with the same host.
 
-#### You can enter the domain you wish to crawl into STDIN and the results will be printed in JSON format to STDOUT
+#### You can enter the domain you wish to crawl at the prompt (STDIN) and the results will be printed in JSON format to STDOUT
+
+This script is the result of a challenge, the details of which can be found in CHALLENGE.md
 
 ##Usage:
 
