@@ -3,9 +3,4 @@ source 'https://rubygems.org'
 gem 'nokogiri'
 gem 'httparty'
 gem 'pry'
-
-group :test do
-  gem 'rspec'
-end
-
-# TODO bundle exec rspec fails (rspec runs)
+gem 'rspec'

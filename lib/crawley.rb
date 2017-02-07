@@ -8,8 +8,7 @@ require 'csv'
 require 'set'
 require 'uri'
 
-
-# TODO name change to Crawley
+# TODO: name change to Crawley
 class Crawler
   def initialize(input_url)
     @input_url = input_url
@@ -18,9 +17,7 @@ class Crawler
   end
 
   def run!
-    while @unvisited_urls.any?
-      scrape_next_url!
-    end
+    scrape_next_url! while @unvisited_urls.any?
     @visited_urls
   end
 
@@ -34,7 +31,7 @@ class Crawler
     puts "Scraping #{next_url}"
 
     page = MyParty.get(next_url).body
-    #TODO error handling in case site is down or url invalid
+    # TODO: error handling in case site is down or url invalid
     assets = Parser.new(page).asset_parser
 
     # Adds the current (next_url) url to the visited url hash
@@ -44,24 +41,22 @@ class Crawler
     @hrefs = Parser.new(page).href_parse
     full_hrefs = UrlManager.new(@input_url, @hrefs).prefix_hrefs
 
-    @unvisited_urls = @unvisited_urls + (full_hrefs - @visited_urls.keys)
+    @unvisited_urls += (full_hrefs - @visited_urls.keys)
   end
 end
 
-#TODO ensure this handles 404 and no connection
+# TODO: ensure this handles 404 and no connection
 class MyParty
   def self.get(*args)
-    begin
-      response = HTTParty.get(*args)
-    rescue HTTParty::Error
-      case response.code
-      when 200
-        response
-      when 404
-        puts "Not found!"
-      when 500...600
-        puts "Error #{response.code}"
-      end
+    response = HTTParty.get(*args)
+  rescue HTTParty::Error
+    case response.code
+    when 200
+      response
+    when 404
+      puts 'Not found!'
+    when 500...600
+      puts "Error #{response.code}"
     end
   end
 end
@@ -70,19 +65,19 @@ class Parser
   # def initialize(parsed_page = Nokogiri::HTML(page))
   #   @parsed_page = parsed_page
   def initialize(page)
-    @parsed_page= Nokogiri::HTML(page)
+    @parsed_page = Nokogiri::HTML(page)
   end
 
   # returns array of paths for site page links
   def href_parse
     href_elems = @parsed_page.css('a[href]')
     href_elems.map do |elem|
-      elem.attributes["href"].value
+      elem.attributes['href'].value
     end
   end
 
   def asset_parser
-    # TODO add hosts
+    # TODO: add hosts
     link_elems = href_parser('link[href]', 'href')
     link_elems_filtered = asset_link_filter(link_elems)
     script_elems = href_parser('script[src]', 'src')
@@ -93,7 +88,7 @@ class Parser
   # Returns array of href values for css selector[attribute]
   def href_parser(selector_attr, attrb)
     href_elems = @parsed_page.css(selector_attr)
-    href_elems = href_elems.map do |elem|
+    href_elems.map do |elem|
       elem.attributes[attrb].value
     end
   end
@@ -103,7 +98,7 @@ class Parser
     asset_array.select do |asset|
       asset.split(//).last != '/'
     end
-    #TODO also filter out .html endings
+    # TODO: also filter out .html endings
   end
 end
 
@@ -123,11 +118,11 @@ class UrlManager
   def prefix_hrefs
     input_url_scheme = URI(@input_url).scheme
     input_url_host = URI(@input_url).host
-    if input_url_scheme == 'http'
-      input_url_root = URI::HTTP.build({host: input_url_host})
-    else
-      input_url_root = URI::HTTPS.build({host: input_url_host})
-    end
+    input_url_root = if input_url_scheme == 'http'
+                       URI::HTTP.build(host: input_url_host)
+                     else
+                       URI::HTTPS.build(host: input_url_host)
+                     end
     valid_hrefs = fragment_filter(@hrefs)
     urls = valid_hrefs.map do |href|
       begin
